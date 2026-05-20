@@ -4,7 +4,7 @@
 
 ## デモ
 
-公開URL: `https://<USERNAME>.github.io/osaka-real-estate-tanka/`
+公開URL: https://kotaro1002.github.io/osaka-real-estate-tanka/
 
 ## 機能
 
