@@ -1,0 +1,28 @@
+# secrets
+local_config.py
+*.key
+.env
+
+# python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# build artifacts
+*.egg-info/
+dist/
+build/
+
+# logs
+*.log
+
+# cache files
+*.cache
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
