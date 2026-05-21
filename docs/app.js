@@ -223,7 +223,7 @@ async function init() {
 
   const metaInfo = document.getElementById("meta-info");
   try {
-    const res = await fetch("data.json");
+    const res = await fetch("data.json", { cache: "no-cache" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     state.dataset = await res.json();
   } catch (e) {
