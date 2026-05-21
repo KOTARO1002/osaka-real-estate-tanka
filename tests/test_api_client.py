@@ -44,3 +44,13 @@ def test_fetch_quarter_raises_after_max_retries():
         with pytest.raises(APIError):
             fetch_quarter(2024, 1, "27102", "APIKEY", max_retries=2)
         assert mock_get.call_count == 2
+
+
+def test_fetch_quarter_no_retry_on_404():
+    with patch("scripts.api_client.requests.get") as mock_get, \
+         patch("scripts.api_client.time.sleep") as mock_sleep:
+        mock_get.return_value = make_response(status_code=404)
+        with pytest.raises(APIError, match="Client error 404"):
+            fetch_quarter(2024, 1, "27102", "APIKEY", max_retries=3)
+        assert mock_get.call_count == 1
+        assert mock_sleep.call_count == 0

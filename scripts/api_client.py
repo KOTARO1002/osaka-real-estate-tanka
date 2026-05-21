@@ -29,8 +29,16 @@ def fetch_quarter(
             response = requests.get(
                 API_BASE_URL, headers=headers, params=params, timeout=timeout
             )
+            # 4xx はクライアントエラーでリトライ不要（特に未提供四半期の 404）
+            if 400 <= response.status_code < 500:
+                raise APIError(
+                    f"Client error {response.status_code} for "
+                    f"city={city_code}, year={year}, quarter={quarter}"
+                )
             response.raise_for_status()
             return response.json()
+        except APIError:
+            raise
         except Exception as e:
             last_error = e
             if attempt < max_retries - 1:
