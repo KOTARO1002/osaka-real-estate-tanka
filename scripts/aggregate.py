@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, Iterable, List, Optional, Tuple
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
 
 def parse_age(building_year: Optional[str], current_year: int) -> Optional[int]:
@@ -27,18 +27,24 @@ def find_bin(value: Optional[float], bins: List[Bin]) -> Optional[Bin]:
     return None
 
 
+DEFAULT_CATEGORIES = ("成約価格情報", "不動産取引価格情報")
+
+
 def aggregate_records(
     records: Iterable[dict],
     age_bins: List[Bin],
     area_bins: List[Bin],
     current_year: int,
     target_type: str = "中古マンション等",
-    target_category: str = "成約価格情報",
+    target_category: Union[str, Iterable[str]] = DEFAULT_CATEGORIES,
 ) -> Dict[str, Dict[str, Dict[str, int]]]:
+    allowed_categories = (
+        {target_category} if isinstance(target_category, str) else set(target_category)
+    )
     buckets: Dict[Tuple[Bin, Bin], List[float]] = defaultdict(list)
 
     for r in records:
-        if r.get("PriceCategory") != target_category:
+        if r.get("PriceCategory") not in allowed_categories:
             continue
         if r.get("Type") != target_type:
             continue

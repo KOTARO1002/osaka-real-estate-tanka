@@ -98,12 +98,33 @@ def test_aggregate_records_skips_non_target_type():
     assert result == {}
 
 
-def test_aggregate_records_skips_non_target_category():
+def test_aggregate_records_includes_both_categories_by_default():
     records = [
-        make_record(60_000_000, 60, "2010年", category="不動産取引価格情報"),
+        make_record(60_000_000, 60, "2010年", category="成約価格情報"),
+        make_record(70_000_000, 65, "2010年", category="不動産取引価格情報"),
+    ]
+    result = aggregate_records(records, AGE_BINS, AREA_BINS, current_year=2026)
+    assert result["10-19"]["60-69"]["n"] == 2
+
+
+def test_aggregate_records_skips_unknown_category():
+    records = [
+        make_record(60_000_000, 60, "2010年", category="その他"),
     ]
     result = aggregate_records(records, AGE_BINS, AREA_BINS, current_year=2026)
     assert result == {}
+
+
+def test_aggregate_records_can_restrict_to_settled_only():
+    records = [
+        make_record(60_000_000, 60, "2010年", category="成約価格情報"),
+        make_record(70_000_000, 65, "2010年", category="不動産取引価格情報"),
+    ]
+    result = aggregate_records(
+        records, AGE_BINS, AREA_BINS, current_year=2026,
+        target_category="成約価格情報",
+    )
+    assert result["10-19"]["60-69"]["n"] == 1
 
 
 def test_aggregate_records_skips_out_of_bins():
