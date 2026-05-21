@@ -47,21 +47,31 @@ function getSortedQuarters(cityData) {
   });
 }
 
+function lowerBoundSqm(areaKey) {
+  return parseInt(areaKey.split("-")[0], 10);
+}
+
 function renderTrend(cityCode, ageKey, areaKey) {
   const cityData = state.dataset.data[cityCode] || {};
   const quarters = getSortedQuarters(cityData);
+  const sqm = lowerBoundSqm(areaKey);
   const x = [];
   const y = [];
-  const n = [];
+  const customdata = [];
 
   for (const yq of quarters) {
     const v = cityData[yq]?.[ageKey]?.[areaKey];
     x.push(yq);
-    y.push(v ? v.avg : null);
-    n.push(v ? v.n : 0);
+    if (v) {
+      y.push(v.avg);
+      customdata.push([v.n, v.avg * sqm]);
+    } else {
+      y.push(null);
+      customdata.push([0, null]);
+    }
   }
 
-  const colors = n.map(c => c < 5 ? "rgba(44,108,246,0.35)" : "rgba(44,108,246,1)");
+  const colors = customdata.map(c => c[0] < 5 ? "rgba(44,108,246,0.35)" : "rgba(44,108,246,1)");
 
   const trace = {
     x, y,
@@ -70,9 +80,9 @@ function renderTrend(cityCode, ageKey, areaKey) {
     name: "㎡単価",
     line: { color: "#2c6cf6" },
     marker: { color: colors, size: 8 },
-    customdata: n,
+    customdata,
     hovertemplate:
-      "%{x}<br>㎡単価: %{y:,.0f} 円/㎡<br>件数: %{customdata}件<extra></extra>",
+      `%{x}<br>㎡単価: %{y:,.0f} 円/㎡<br>${sqm}㎡換算: %{customdata[1]:,.0f} 円<br>件数: %{customdata[0]}件<extra></extra>`,
     connectgaps: false,
   };
 
@@ -126,7 +136,7 @@ function getYearAggregate(cityCode, year, ageKey, areaKey) {
   return totalN > 0 ? { avg: Math.round(weighted / totalN), n: totalN } : null;
 }
 
-function renderCompareGroup(divId, rows, label, year, opaque, translucent) {
+function renderCompareGroup(divId, rows, label, year, sqm, opaque, translucent) {
   const sorted = [...rows].sort((a, b) => (b.avg ?? -1) - (a.avg ?? -1));
   const colors = sorted.map(r => (r.avg == null || r.n < 5) ? translucent : opaque);
 
@@ -135,9 +145,13 @@ function renderCompareGroup(divId, rows, label, year, opaque, translucent) {
     y: sorted.map(r => r.avg),
     type: "bar",
     marker: { color: colors },
-    customdata: sorted.map(r => [r.n, r.avg == null ? "データなし" : `${r.avg.toLocaleString()} 円/㎡`]),
+    customdata: sorted.map(r => [
+      r.n,
+      r.avg == null ? "データなし" : `${r.avg.toLocaleString()} 円/㎡`,
+      r.avg == null ? "—" : `${(r.avg * sqm).toLocaleString()} 円`,
+    ]),
     hovertemplate:
-      "%{x}<br>㎡単価: %{customdata[1]}<br>件数: %{customdata[0]}件<extra></extra>",
+      `%{x}<br>㎡単価: %{customdata[1]}<br>${sqm}㎡換算: %{customdata[2]}<br>件数: %{customdata[0]}件<extra></extra>`,
   };
 
   const layout = {
@@ -159,6 +173,7 @@ function renderCompareGroup(divId, rows, label, year, opaque, translucent) {
 function renderCompare(ageKey, areaKey) {
   const year = getMostRecentFullYear();
   if (year == null) return;
+  const sqm = lowerBoundSqm(areaKey);
   const groups = { osaka: [], sakai: [], other: [] };
 
   for (const city of state.dataset.cities) {
@@ -168,15 +183,15 @@ function renderCompare(ageKey, areaKey) {
   }
 
   renderCompareGroup(
-    "chart-compare-osaka", groups.osaka, "大阪市 24区", year,
+    "chart-compare-osaka", groups.osaka, "大阪市 24区", year, sqm,
     "rgba(44,108,246,1)", "rgba(44,108,246,0.35)"
   );
   renderCompareGroup(
-    "chart-compare-sakai", groups.sakai, "堺市 7区", year,
+    "chart-compare-sakai", groups.sakai, "堺市 7区", year, sqm,
     "rgba(34,163,107,1)", "rgba(34,163,107,0.35)"
   );
   renderCompareGroup(
-    "chart-compare-other", groups.other, "その他 41市町村", year,
+    "chart-compare-other", groups.other, "その他 41市町村", year, sqm,
     "rgba(255,127,14,1)", "rgba(255,127,14,0.35)"
   );
 }
@@ -192,23 +207,29 @@ function renderHeatmap(cityCode) {
   const z = [];
   const text = [];
 
+  const customdata = [];
   for (const areaBin of areaBins) {
     const row = [];
     const tRow = [];
+    const cdRow = [];
     for (const ageBin of ageBins) {
       const ageKey = `${ageBin[0]}-${ageBin[1]}`;
       const areaKey = `${areaBin[0]}-${areaBin[1]}`;
       const v = getYearAggregate(cityCode, year, ageKey, areaKey);
+      const sqm = areaBin[0];
       if (v) {
         row.push(v.avg);
         tRow.push(`${v.avg.toLocaleString()}<br>(${v.n}件)`);
+        cdRow.push([v.n, (v.avg * sqm).toLocaleString(), sqm]);
       } else {
         row.push(null);
         tRow.push("");
+        cdRow.push([0, "—", sqm]);
       }
     }
     z.push(row);
     text.push(tRow);
+    customdata.push(cdRow);
   }
 
   const trace = {
@@ -219,6 +240,9 @@ function renderHeatmap(cityCode) {
     text,
     texttemplate: "%{text}",
     textfont: { color: "white", size: 11 },
+    customdata,
+    hovertemplate:
+      "築年数 %{x} × 専有面積 %{y}<br>㎡単価: %{z:,.0f} 円/㎡<br>%{customdata[2]}㎡換算: %{customdata[1]} 円<br>件数: %{customdata[0]}件<extra></extra>",
     colorbar: { title: "円/㎡" },
   };
 
