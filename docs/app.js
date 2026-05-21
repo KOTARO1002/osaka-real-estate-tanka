@@ -182,10 +182,10 @@ function renderCompare(ageKey, areaKey) {
 }
 
 function renderHeatmap(cityCode) {
-  const latest = getLatestQuarter();
+  const year = getMostRecentFullYear();
+  if (year == null) return;
   const ageBins = state.dataset.meta.age_bins;
   const areaBins = state.dataset.meta.area_bins;
-  const cityLatest = state.dataset.data[cityCode]?.[latest] || {};
 
   const x = ageBins.map(b => `${b[0]}-${b[1]}年`);
   const y = areaBins.map(b => `${b[0]}-${b[1]}㎡`);
@@ -196,7 +196,9 @@ function renderHeatmap(cityCode) {
     const row = [];
     const tRow = [];
     for (const ageBin of ageBins) {
-      const v = cityLatest[`${ageBin[0]}-${ageBin[1]}`]?.[`${areaBin[0]}-${areaBin[1]}`];
+      const ageKey = `${ageBin[0]}-${ageBin[1]}`;
+      const areaKey = `${areaBin[0]}-${areaBin[1]}`;
+      const v = getYearAggregate(cityCode, year, ageKey, areaKey);
       if (v) {
         row.push(v.avg);
         tRow.push(`${v.avg.toLocaleString()}<br>(${v.n}件)`);
@@ -225,7 +227,7 @@ function renderHeatmap(cityCode) {
     margin: { t: 30, l: 90, r: 20, b: 60 },
     xaxis: { title: "築年数", fixedrange: true },
     yaxis: { title: "専有面積", fixedrange: true },
-    title: { text: `${cityName} / ${latest}`, font: { size: 12 }, x: 0 },
+    title: { text: `${cityName} / ${year}年通期`, font: { size: 12 }, x: 0 },
   };
 
   Plotly.react("chart-heatmap", [trace], layout, { displayModeBar: false, responsive: true, scrollZoom: false });

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
   <title>大阪府マンション㎡単価ダッシュボード</title>
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
   <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
 </head>
 <body>
@@ -44,8 +44,8 @@
   </section>
 
   <section class="chart-section">
-    <h2>3. ヒートマップ（最新四半期）</h2>
-    <p class="chart-desc">選択した市区町村の最新四半期、築年数×面積帯マトリクス</p>
+    <h2>3. ヒートマップ（前年通期）</h2>
+    <p class="chart-desc">選択した市区町村の<strong>前年通期（4四半期合算）</strong>、築年数×面積帯マトリクス。件数で重み付けした平均値です。</p>
     <div id="chart-heatmap" class="chart"></div>
   </section>
 
@@ -86,6 +86,6 @@
     </p>
   </footer>
 
-  <script src="app.js?v=5"></script>
+  <script src="app.js?v=6"></script>
 </body>
 </html>

@@ -1,0 +1,42 @@
+name: Update dataset
+
+on:
+  schedule:
+    # 毎月5日 00:00 UTC = 09:00 JST に実行
+    - cron: "0 0 5 * *"
+  workflow_dispatch:  # 手動トリガー可
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch latest data
+        env:
+          MLIT_API_KEY: ${{ secrets.MLIT_API_KEY }}
+        run: |
+          python -m scripts.run --end-year $(date -u +%Y) --end-quarter 4
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -n "$(git status --porcelain docs/data.json)" ]; then
+            git add docs/data.json
+            git commit -m "chore: auto-update data.json [skip ci]"
+            git push
+            echo "::notice::data.json updated"
+          else
+            echo "::notice::No data changes"
+          fi

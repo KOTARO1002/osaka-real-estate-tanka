@@ -1,5 +1,6 @@
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -50,12 +51,13 @@ def main():
     try:
         from local_config import API_KEY
     except ImportError:
-        sys.exit(
-            "ERROR: local_config.py が見つかりません。"
-            "local_config.example.py をコピーして local_config.py を作成しAPIキーを設定してください。"
-        )
+        API_KEY = os.environ.get("MLIT_API_KEY", "")
     if not API_KEY:
-        sys.exit("ERROR: local_config.py の API_KEY が空です。")
+        sys.exit(
+            "ERROR: APIキーが取得できません。"
+            "ローカルでは local_config.py に API_KEY を設定するか、"
+            "環境変数 MLIT_API_KEY をセットしてください。"
+        )
 
     if args.cities == "all":
         cities = CITIES
