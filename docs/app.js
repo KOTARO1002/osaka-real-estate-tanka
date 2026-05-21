@@ -116,12 +116,12 @@ function renderCompare(ageKey, areaKey) {
 
   const layout = {
     margin: { t: 20, l: 70, r: 20, b: 120 },
-    xaxis: { tickangle: -45 },
-    yaxis: { title: "㎡単価（円/㎡）", tickformat: ",.0f" },
+    xaxis: { tickangle: -45, fixedrange: true },
+    yaxis: { title: "㎡単価（円/㎡）", tickformat: ",.0f", fixedrange: true },
     title: { text: `最新四半期: ${latest}`, font: { size: 12 }, x: 0 },
   };
 
-  Plotly.react("chart-compare", [trace], layout, { displayModeBar: false, responsive: true });
+  Plotly.react("chart-compare", [trace], layout, { displayModeBar: false, responsive: true, scrollZoom: false });
 }
 
 function renderHeatmap(cityCode) {
