@@ -90,38 +90,66 @@ function getLatestQuarter() {
   return state.dataset.meta.year_quarter_range[1];
 }
 
-function renderCompare(ageKey, areaKey) {
-  const latest = getLatestQuarter();
-  const rows = [];
+function isOsakaCityWard(code) {
+  const n = parseInt(code, 10);
+  return n >= 27102 && n <= 27128;
+}
 
-  for (const city of state.dataset.cities) {
-    const v = state.dataset.data[city.code]?.[latest]?.[ageKey]?.[areaKey];
-    if (v) {
-      rows.push({ name: city.name, avg: v.avg, n: v.n });
-    }
-  }
-  rows.sort((a, b) => b.avg - a.avg);
-
-  const colors = rows.map(r => r.n < 5 ? "rgba(44,108,246,0.35)" : "rgba(44,108,246,1)");
-
-  const trace = {
+function buildCompareTrace(rows, label, opaque, translucent) {
+  const colors = rows.map(r => (r.avg == null || r.n < 5) ? translucent : opaque);
+  return {
     x: rows.map(r => r.name),
     y: rows.map(r => r.avg),
     type: "bar",
+    name: label,
     marker: { color: colors },
-    customdata: rows.map(r => r.n),
+    customdata: rows.map(r => [r.n, r.avg == null ? "データなし" : `${r.avg.toLocaleString()} 円/㎡`]),
     hovertemplate:
-      "%{x}<br>㎡単価: %{y:,.0f} 円/㎡<br>件数: %{customdata}件<extra></extra>",
+      "%{x}<br>㎡単価: %{customdata[1]}<br>件数: %{customdata[0]}件<extra>" + label + "</extra>",
   };
+}
+
+function renderCompare(ageKey, areaKey) {
+  const latest = getLatestQuarter();
+  const osakaRows = [];
+  const otherRows = [];
+
+  for (const city of state.dataset.cities) {
+    const v = state.dataset.data[city.code]?.[latest]?.[ageKey]?.[areaKey];
+    const row = { name: city.name, avg: v?.avg ?? null, n: v?.n ?? 0 };
+    if (isOsakaCityWard(city.code)) osakaRows.push(row);
+    else otherRows.push(row);
+  }
+  const byAvgDesc = (a, b) => (b.avg ?? -1) - (a.avg ?? -1);
+  osakaRows.sort(byAvgDesc);
+  otherRows.sort(byAvgDesc);
+
+  const osakaTrace = buildCompareTrace(
+    osakaRows, "大阪市", "rgba(44,108,246,1)", "rgba(44,108,246,0.35)"
+  );
+  const otherTrace = buildCompareTrace(
+    otherRows, "その他", "rgba(255,127,14,1)", "rgba(255,127,14,0.35)"
+  );
+
+  const orderedNames = [...osakaRows.map(r => r.name), ...otherRows.map(r => r.name)];
 
   const layout = {
-    margin: { t: 20, l: 70, r: 20, b: 120 },
-    xaxis: { tickangle: -45, fixedrange: true },
+    margin: { t: 30, l: 70, r: 20, b: 140 },
+    xaxis: {
+      tickangle: -45,
+      fixedrange: true,
+      categoryorder: "array",
+      categoryarray: orderedNames,
+      tickfont: { size: 10 },
+    },
     yaxis: { title: "㎡単価（円/㎡）", tickformat: ",.0f", fixedrange: true },
-    title: { text: `最新四半期: ${latest}`, font: { size: 12 }, x: 0 },
+    title: { text: `最新四半期: ${latest}（左:大阪市24区 / 右:その他48市町村、各群内は降順）`, font: { size: 12 }, x: 0 },
+    showlegend: true,
+    legend: { orientation: "h", y: 1.08, x: 1, xanchor: "right" },
+    barmode: "group",
   };
 
-  Plotly.react("chart-compare", [trace], layout, { displayModeBar: false, responsive: true, scrollZoom: false });
+  Plotly.react("chart-compare", [osakaTrace, otherTrace], layout, { displayModeBar: false, responsive: true, scrollZoom: false });
 }
 
 function renderHeatmap(cityCode) {

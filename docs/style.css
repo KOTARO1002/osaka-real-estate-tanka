@@ -87,6 +87,10 @@ header h1 {
   min-height: 400px;
 }
 
+.chart-tall {
+  min-height: 520px;
+}
+
 footer {
   padding: 1rem;
   text-align: center;
