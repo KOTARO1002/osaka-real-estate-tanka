@@ -78,12 +78,12 @@ function renderTrend(cityCode, ageKey, areaKey) {
 
   const layout = {
     margin: { t: 20, l: 70, r: 20, b: 50 },
-    xaxis: { title: "四半期" },
-    yaxis: { title: "㎡単価（円/㎡）", tickformat: ",.0f" },
+    xaxis: { title: "四半期", fixedrange: true },
+    yaxis: { title: "㎡単価（円/㎡）", tickformat: ",.0f", fixedrange: true },
     hovermode: "x unified",
   };
 
-  Plotly.react("chart-trend", [trace], layout, { displayModeBar: false, responsive: true });
+  Plotly.react("chart-trend", [trace], layout, { displayModeBar: false, responsive: true, scrollZoom: false });
 }
 
 function getLatestQuarter() {
@@ -166,12 +166,12 @@ function renderHeatmap(cityCode) {
   const cityName = state.dataset.cities.find(c => c.code === cityCode)?.name || cityCode;
   const layout = {
     margin: { t: 30, l: 90, r: 20, b: 60 },
-    xaxis: { title: "築年数" },
-    yaxis: { title: "専有面積" },
+    xaxis: { title: "築年数", fixedrange: true },
+    yaxis: { title: "専有面積", fixedrange: true },
     title: { text: `${cityName} / ${latest}`, font: { size: 12 }, x: 0 },
   };
 
-  Plotly.react("chart-heatmap", [trace], layout, { displayModeBar: false, responsive: true });
+  Plotly.react("chart-heatmap", [trace], layout, { displayModeBar: false, responsive: true, scrollZoom: false });
 }
 
 function renderAll() {
