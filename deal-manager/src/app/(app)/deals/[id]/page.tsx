@@ -3,11 +3,12 @@ import { notFound } from "next/navigation";
 import { ChevronLeft, Pencil } from "lucide-react";
 
 import { getCurrentStaff } from "@/lib/auth";
-import { getDealById } from "@/lib/queries/deals";
+import { getDealById, getStaffList } from "@/lib/queries/deals";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { DeleteDealButton } from "@/components/delete-deal-button";
+import { TaskSection } from "@/components/task-section";
 import { formatDateJa, formatPrice } from "@/lib/format";
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
@@ -25,8 +26,11 @@ export default async function DealDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const staff = await getCurrentStaff();
-  const deal = await getDealById(id);
+  const [staff, deal, staffList] = await Promise.all([
+    getCurrentStaff(),
+    getDealById(id),
+    getStaffList(),
+  ]);
   if (!deal) notFound();
 
   const isAdmin = staff?.role === "admin";
@@ -102,19 +106,15 @@ export default async function DealDetailPage({
           </CardContent>
         </Card>
 
-        {/* タスク・タイムラインは Phase 4 / 7 で実装 */}
+        {/* タスク（タイムラインは Phase 7 で追加） */}
         <div className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">
-                タスク（{deal.tasks.filter((t) => !t.is_done).length} 件未完 / 全
-                {deal.tasks.length} 件）
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-muted-foreground">
-              {deal.tasks.length === 0
-                ? "タスクはまだありません。"
-                : "タスク操作は次フェーズで実装します。"}
+            <CardContent className="pt-6">
+              <TaskSection
+                dealId={deal.id}
+                tasks={deal.tasks}
+                staff={staffList}
+              />
             </CardContent>
           </Card>
         </div>
