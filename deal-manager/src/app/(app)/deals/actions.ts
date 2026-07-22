@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
-import { requireStaff, requireAdmin, getCurrentStaff } from "@/lib/auth";
+import { requireStaff, requireAdmin } from "@/lib/auth";
 import {
   dealFormSchema,
   normalizeDeal,
@@ -122,9 +122,4 @@ export async function deleteDeal(id: string): Promise<void> {
   revalidatePath("/deals");
   revalidatePath("/");
   redirect("/deals");
-}
-
-/** 現在のスタッフを返す（クライアントからの権限判定補助）。 */
-export async function whoAmI() {
-  return getCurrentStaff();
 }

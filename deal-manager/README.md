@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 案件管理アプリ（シンプルハウス）
 
-## Getting Started
+不動産仲介「シンプルハウス」向けの、ANDPADライクな **案件一元管理Webアプリ**。
+売買仲介の各案件について「案件名・担当者・採用銀行・契約日・決済日・タスク」を
+一元管理し、全スタッフがログインして閲覧・編集できます。
 
-First, run the development server:
+## 技術スタック
+
+- **Next.js 15**（App Router）+ TypeScript
+- **Supabase**（PostgreSQL / Auth / Row Level Security / Realtime）+ `@supabase/ssr`
+- **Tailwind CSS v4** + shadcn/ui
+- **react-hook-form** + **zod**
+- **date-fns**（`date-fns/locale/ja`・営業日計算）
+
+## 主な機能
+
+- **ダッシュボード**: 全案件から今日／今週／期限超過のタスクを横断集約、直近の契約・決済サマリ
+- **案件一覧**: テーブル／カンバン切替、ステータス・担当者・銀行で絞り込み、契約日/決済日でソート
+- **案件詳細**: 基本情報の編集、タスク管理、更新履歴タイムライン
+- **期日逆算エンジン**: 契約日・決済日を入れると営業日ベースで逆算タスクを自動生成・追従
+- **スタッフ管理**（管理者のみ）: 招待・ロール変更・削除
+- **権限**: 閲覧は全スタッフ、削除（案件・スタッフ）は管理者のみ（RLSで制御）
+
+## セットアップ
+
+### 1. 依存関係のインストール
+
+```bash
+npm install
+```
+
+### 2. 環境変数
+
+`.env.example` を `.env.local` にコピーし、Supabase の値を設定します。
+
+```bash
+cp .env.example .env.local
+```
+
+```
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...   # スタッフ招待・削除に使用
+```
+
+### 3. データベース
+
+Supabase の SQL Editor で以下を順に実行します（詳細は `supabase/README.md`）。
+
+1. `supabase/migrations/0001_schema.sql`
+2. `supabase/migrations/0002_rls.sql`
+3. `supabase/seed.sql`（サンプルデータ・任意）
+
+### 4. 開発サーバー
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+http://localhost:3000 を開きます。サンプルログイン（seed実行時）:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- 管理者: `admin@simplehouse.co.jp` / `password123`
+- メンバー: `member@simplehouse.co.jp` / `password123`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## デプロイ（Vercel）
 
-## Learn More
+環境変数（上記3つ）を Vercel プロジェクトに設定してデプロイします。
 
-To learn more about Next.js, take a look at the following resources:
+## ディレクトリ構成
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+  app/
+    (app)/          ログイン必須エリア（ダッシュボード・案件・スタッフ）
+    login/          ログイン画面
+  components/       UIコンポーネント（ui/ は shadcn/ui 相当）
+  lib/
+    supabase/       Supabaseクライアント（client/server/middleware/admin）と型
+    queries/        データ取得ヘルパー
+    validations/    zod スキーマ
+    task-templates.ts / task-engine.ts   期日逆算エンジン
+supabase/
+  migrations/       DDL（SQL Editorで実行）
+  seed.sql          サンプルデータ
+```
