@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { DeleteDealButton } from "@/components/delete-deal-button";
 import { TaskSection } from "@/components/task-section";
+import { DealTimeline } from "@/components/deal-timeline";
 import { formatDateJa, formatPrice } from "@/lib/format";
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
@@ -106,7 +107,7 @@ export default async function DealDetailPage({
           </CardContent>
         </Card>
 
-        {/* タスク（タイムラインは Phase 7 で追加） */}
+        {/* タスク & タイムライン */}
         <div className="space-y-6">
           <Card>
             <CardContent className="pt-6">
@@ -115,6 +116,15 @@ export default async function DealDetailPage({
                 tasks={deal.tasks}
                 staff={staffList}
               />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">タイムライン</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <DealTimeline activities={deal.activities} />
             </CardContent>
           </Card>
         </div>
