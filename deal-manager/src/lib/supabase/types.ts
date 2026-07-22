@@ -31,16 +31,19 @@ export type DealStatus =
 export type TaskCategory = "契約前" | "契約〜決済" | "決済後" | "その他";
 
 // ---- テーブル行の型 ----
-export interface StaffRow {
+// 注: これらの行型は Supabase の GenericSchema 制約
+// （Record<string, unknown> への代入可能性）を満たすため、
+// interface ではなく type エイリアスで定義する必要がある。
+export type StaffRow = {
   id: string;
   name: string;
   role: StaffRole;
   email: string;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface DealRow {
+export type DealRow = {
   id: string;
   name: string;
   deal_type: DealType;
@@ -58,9 +61,9 @@ export interface DealRow {
   memo: string | null;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface TaskRow {
+export type TaskRow = {
   id: string;
   deal_id: string;
   title: string;
@@ -76,15 +79,15 @@ export interface TaskRow {
   manually_edited: boolean;
   created_at: string;
   updated_at: string;
-}
+};
 
-export interface DealActivityRow {
+export type DealActivityRow = {
   id: string;
   deal_id: string;
   staff_id: string | null;
   body: string;
   created_at: string;
-}
+};
 
 // ---- Supabase クライアント用 Database 型 ----
 type WithDefaults<T, Optional extends keyof T> = Omit<T, Optional> &
@@ -97,6 +100,7 @@ export interface Database {
         Row: StaffRow;
         Insert: WithDefaults<StaffRow, "created_at" | "updated_at" | "role">;
         Update: Partial<StaffRow>;
+        Relationships: [];
       };
       deals: {
         Row: DealRow;
@@ -120,6 +124,7 @@ export interface Database {
           | "transaction_side"
         >;
         Update: Partial<DealRow>;
+        Relationships: [];
       };
       tasks: {
         Row: TaskRow;
@@ -138,6 +143,7 @@ export interface Database {
           | "category"
         >;
         Update: Partial<TaskRow>;
+        Relationships: [];
       };
       deal_activities: {
         Row: DealActivityRow;
@@ -146,6 +152,7 @@ export interface Database {
           "id" | "created_at" | "staff_id"
         >;
         Update: Partial<DealActivityRow>;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;
@@ -158,5 +165,6 @@ export interface Database {
       deal_status: DealStatus;
       task_category: TaskCategory;
     };
+    CompositeTypes: Record<string, never>;
   };
 }
