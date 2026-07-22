@@ -33,7 +33,7 @@ const ASSIGNEE_SELECT =
 type DealListRaw = DealRow & {
   assignee: StaffMini | null;
   sub_assignee: StaffMini | null;
-  tasks: Pick<TaskRow, "id" | "is_done">[] | null;
+  tasks: Pick<TaskRow, "id" | "is_done" | "item_type">[] | null;
 };
 
 type DealDetailRaw = DealRow & {
@@ -48,7 +48,7 @@ export async function getDeals(): Promise<DealListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("deals")
-    .select(`*, ${ASSIGNEE_SELECT}, tasks(id, is_done)`)
+    .select(`*, ${ASSIGNEE_SELECT}, tasks(id, is_done, item_type)`)
     .order("updated_at", { ascending: false });
 
   if (error) throw error;
@@ -58,7 +58,10 @@ export async function getDeals(): Promise<DealListItem[]> {
     ...deal,
     assignee: assignee ?? null,
     sub_assignee: sub_assignee ?? null,
-    open_task_count: (tasks ?? []).filter((t) => !t.is_done).length,
+    // 未完タスク数は「やること(todo)」のみ数える（期日は完了概念がないため）
+    open_task_count: (tasks ?? []).filter(
+      (t) => t.item_type === "todo" && !t.is_done
+    ).length,
   }));
 }
 

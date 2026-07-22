@@ -4,7 +4,8 @@ Supabase プロジェクトを作成後、**SQL Editor** で以下の順にSQL�
 
 1. `migrations/0001_schema.sql` … Enum・テーブル・インデックス・トリガー
 2. `migrations/0002_rls.sql` … Row Level Security ポリシー
-3. `seed.sql` … 動作確認用サンプルデータ（任意）
+3. `migrations/0003_task_item_type.sql` … タスク種別（やること/期日）の追加
+4. `seed.sql` … 動作確認用サンプルデータ（任意）
 
 ## サンプルログイン（seed 実行時）
 

@@ -3,6 +3,7 @@ import type {
   DealType,
   LoanStatus,
   TaskCategory,
+  TaskItemType,
   TransactionSide,
 } from "@/lib/supabase/types";
 
@@ -62,6 +63,43 @@ export const TASK_CATEGORY_COLORS: Record<TaskCategory, string> = {
   "決済後": "#8b5cf6",
   "その他": "#94a3b8",
 };
+
+/** タスク種別ラベル（todo=やること / due=期日） */
+export const TASK_ITEM_TYPE_LABELS: Record<TaskItemType, string> = {
+  todo: "やること",
+  due: "期日",
+};
+
+/**
+ * 追加ダイアログのプルダウン候補。
+ * 「必ずあるイベント」＝期日(due, 赤字)、「よく使うやること」＝todo。
+ * type は初期値で、ダイアログの種別トグルで上書き可能。
+ */
+export interface TaskPreset {
+  title: string;
+  type: TaskItemType;
+  category: TaskCategory;
+}
+
+export const EVENT_PRESETS: TaskPreset[] = [
+  { title: "売買契約", type: "due", category: "契約前" },
+  { title: "決済・引渡し", type: "due", category: "契約〜決済" },
+  { title: "ローン本申込", type: "due", category: "契約〜決済" },
+  { title: "金消契約", type: "due", category: "契約〜決済" },
+  { title: "手付金授受", type: "due", category: "契約前" },
+  { title: "融資事前審査", type: "due", category: "契約前" },
+  { title: "融資本承認", type: "due", category: "契約〜決済" },
+];
+
+export const TODO_PRESETS: TaskPreset[] = [
+  { title: "重要事項説明の準備", type: "todo", category: "契約前" },
+  { title: "売買契約書ドラフト・特約確認", type: "todo", category: "契約前" },
+  { title: "契約書類最終チェック", type: "todo", category: "契約前" },
+  { title: "内見同行", type: "todo", category: "その他" },
+  { title: "司法書士へ書類依頼", type: "todo", category: "契約〜決済" },
+  { title: "精算書作成", type: "todo", category: "契約〜決済" },
+  { title: "顧客へ連絡", type: "todo", category: "その他" },
+];
 
 /** 採用銀行のよく使う候補（自由入力のサジェスト用） */
 export const BANK_SUGGESTIONS: string[] = [

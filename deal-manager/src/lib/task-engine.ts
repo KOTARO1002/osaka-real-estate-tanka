@@ -63,6 +63,7 @@ export async function syncAutoTasks(dealId: string): Promise<void> {
           title: tpl.title,
           due_date: dueDate,
           category: tpl.category,
+          item_type: tpl.itemType,
           assignee_id: deal.assignee_id,
           auto_generated: true,
           template_key: tpl.key,

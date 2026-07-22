@@ -32,6 +32,8 @@ export async function getOpenTasksAcrossDeals(): Promise<DashboardTask[]> {
       `*, deal:deals(id, name, status), assignee:staff!tasks_assignee_id_fkey(name)`
     )
     .eq("is_done", false)
+    // 「やること(todo)」のみ集約（期日は完了概念がないため直近サマリで別扱い）
+    .eq("item_type", "todo")
     .order("due_date", { ascending: true, nullsFirst: false });
 
   if (error) throw error;

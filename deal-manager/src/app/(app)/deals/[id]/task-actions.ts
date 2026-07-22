@@ -37,13 +37,19 @@ export async function addTask(
     deal_id: dealId,
     title: v.title,
     due_date: v.due_date,
+    item_type: v.item_type,
     category: v.category,
     assignee_id: v.assignee_id,
     auto_generated: false,
   });
   if (error) return { ok: false, error: "タスクの追加に失敗しました。" };
 
-  await logActivity(dealId, staff.id, `${staff.name} がタスク「${v.title}」を追加しました`);
+  const kindLabel = v.item_type === "due" ? "期日" : "やること";
+  await logActivity(
+    dealId,
+    staff.id,
+    `${staff.name} が${kindLabel}「${v.title}」を追加しました`
+  );
   revalidatePath(`/deals/${dealId}`);
   revalidatePath("/");
   return { ok: true };
@@ -87,6 +93,7 @@ export async function updateTask(
     .update({
       title: v.title,
       due_date: v.due_date,
+      item_type: v.item_type,
       category: v.category,
       assignee_id: v.assignee_id,
       manually_edited: true,

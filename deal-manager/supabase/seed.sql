@@ -101,15 +101,25 @@ on conflict (id) do nothing;
 -- ----------------------------------------------------------------------------
 -- tasks（手動タスクの例。逆算タスクはアプリ側で自動生成されます）
 -- ----------------------------------------------------------------------------
-insert into public.tasks (deal_id, title, due_date, assignee_id, category, is_done, done_at) values
+insert into public.tasks (deal_id, title, due_date, assignee_id, category, item_type, is_done, done_at) values
   ('aaaaaaa1-0000-0000-0000-000000000001', '内見の日程調整', (current_date + 2),
-    '22222222-2222-2222-2222-222222222222', '契約前', false, null),
+    '22222222-2222-2222-2222-222222222222', '契約前', 'todo', false, null),
   ('aaaaaaa1-0000-0000-0000-000000000001', '資金計画のヒアリング', (current_date + 3),
-    '22222222-2222-2222-2222-222222222222', '契約前', false, null),
+    '22222222-2222-2222-2222-222222222222', '契約前', 'todo', false, null),
   ('aaaaaaa1-0000-0000-0000-000000000002', '媒介契約書の締結', (current_date - 3),
-    '11111111-1111-1111-1111-111111111111', '契約前', true, now()),
+    '11111111-1111-1111-1111-111111111111', '契約前', 'todo', true, now()),
   ('aaaaaaa1-0000-0000-0000-000000000003', '本承認の確認連絡', (current_date + 3),
-    '22222222-2222-2222-2222-222222222222', '契約〜決済', false, null)
+    '22222222-2222-2222-2222-222222222222', '契約〜決済', 'todo', false, null)
+on conflict do nothing;
+
+-- 期日（due）のサンプル。逆算エンジンと重複しないよう template_key を合わせておく
+-- （案件を再保存すると逆算エンジンがこの行を更新して追従する）
+insert into public.tasks
+  (deal_id, title, due_date, assignee_id, category, item_type, auto_generated, template_key) values
+  ('aaaaaaa1-0000-0000-0000-000000000002', '売買契約', (current_date + 14),
+    '11111111-1111-1111-1111-111111111111', '契約前', 'due', true, 'contract_day'),
+  ('aaaaaaa1-0000-0000-0000-000000000003', '決済・引渡し', (current_date + 30),
+    '22222222-2222-2222-2222-222222222222', '契約〜決済', 'due', true, 'settlement_day')
 on conflict do nothing;
 
 -- ----------------------------------------------------------------------------

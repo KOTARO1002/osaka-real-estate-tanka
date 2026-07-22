@@ -30,6 +30,9 @@ export type DealStatus =
 
 export type TaskCategory = "契約前" | "契約〜決済" | "決済後" | "その他";
 
+/** タスク種別: todo=やること（完了可）/ due=期日・イベント（赤字・表示のみ） */
+export type TaskItemType = "todo" | "due";
+
 // ---- テーブル行の型 ----
 // 注: これらの行型は Supabase の GenericSchema 制約
 // （Record<string, unknown> への代入可能性）を満たすため、
@@ -72,6 +75,8 @@ export type TaskRow = {
   is_done: boolean;
   done_at: string | null;
   category: TaskCategory;
+  /** 種別: やること(todo) / 期日(due) */
+  item_type: TaskItemType;
   auto_generated: boolean;
   /** 逆算テンプレートのキー。自動生成タスクの追従・重複判定に使う */
   template_key: string | null;
@@ -141,6 +146,7 @@ export interface Database {
           | "template_key"
           | "manually_edited"
           | "category"
+          | "item_type"
         >;
         Update: Partial<TaskRow>;
         Relationships: [];
@@ -164,6 +170,7 @@ export interface Database {
       loan_status: LoanStatus;
       deal_status: DealStatus;
       task_category: TaskCategory;
+      task_item_type: TaskItemType;
     };
     CompositeTypes: Record<string, never>;
   };
