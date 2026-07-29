@@ -11,9 +11,11 @@ import { requireStaff } from "@/lib/auth";
 import {
   getOpenTasksAcrossDeals,
   getUpcomingKeyDates,
+  getCalendarItems,
   type DashboardTask,
 } from "@/lib/queries/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardCalendar } from "@/components/dashboard-calendar";
 import { formatDateShort } from "@/lib/format";
 import { TASK_CATEGORY_COLORS } from "@/lib/domain";
 import { cn } from "@/lib/utils";
@@ -93,9 +95,10 @@ export default async function DashboardPage() {
   const today = startOfToday();
   const todayISO = format(today, "yyyy-MM-dd");
 
-  const [tasks, keyDates] = await Promise.all([
+  const [tasks, keyDates, calendarItems] = await Promise.all([
     getOpenTasksAcrossDeals(),
     getUpcomingKeyDates(todayISO),
+    getCalendarItems(),
   ]);
 
   // 期限で仕分け
@@ -159,6 +162,13 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* 全体カレンダー（全案件の期日・やることを集約） */}
+      <Card>
+        <CardContent className="pt-6">
+          <DashboardCalendar items={calendarItems} />
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
