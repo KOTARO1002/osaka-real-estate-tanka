@@ -36,13 +36,6 @@ type DealListRaw = DealRow & {
   tasks: Pick<TaskRow, "id" | "is_done" | "item_type">[] | null;
 };
 
-type DealDetailRaw = DealRow & {
-  assignee: StaffMini | null;
-  sub_assignee: StaffMini | null;
-  tasks: TaskRow[] | null;
-  activities: (DealActivityRow & { staff: StaffMini | null })[] | null;
-};
-
 /** 案件一覧を取得（未完タスク数付き）。 */
 export async function getDeals(): Promise<DealListItem[]> {
   const supabase = await createClient();
@@ -68,30 +61,46 @@ export async function getDeals(): Promise<DealListItem[]> {
 /** 案件を1件取得（担当者・タスク・タイムライン込み）。存在しなければ null。 */
 export async function getDealById(id: string): Promise<DealDetail | null> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+
+  // 入れ子の埋め込み結合は環境によって失敗するため、クエリを分けて取得する。
+  const { data: dealData, error } = await supabase
     .from("deals")
-    .select(
-      `*, ${ASSIGNEE_SELECT},
-       tasks(*),
-       activities:deal_activities(*, staff:staff(id,name))`
-    )
+    .select(`*, ${ASSIGNEE_SELECT}`)
     .eq("id", id)
     .maybeSingle();
 
   if (error) throw error;
-  if (!data) return null;
+  if (!dealData) return null;
 
-  const raw = data as unknown as DealDetailRaw;
-  const { tasks, activities, assignee, sub_assignee, ...deal } = raw;
+  const [{ data: taskData }, { data: activityData }, staff] = await Promise.all(
+    [
+      supabase.from("tasks").select("*").eq("deal_id", id),
+      supabase
+        .from("deal_activities")
+        .select("*")
+        .eq("deal_id", id)
+        .order("created_at", { ascending: false }),
+      getStaffList(),
+    ]
+  );
+
+  const nameById = new Map(staff.map((s) => [s.id, s.name]));
+  const { assignee, sub_assignee, ...deal } = dealData as DealRow & {
+    assignee: StaffMini | null;
+    sub_assignee: StaffMini | null;
+  };
 
   return {
-    ...deal,
+    ...(deal as DealRow),
     assignee: assignee ?? null,
     sub_assignee: sub_assignee ?? null,
-    tasks: (tasks ?? []).slice().sort(sortTasks),
-    activities: (activities ?? [])
-      .slice()
-      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1)),
+    tasks: ((taskData ?? []) as TaskRow[]).slice().sort(sortTasks),
+    activities: ((activityData ?? []) as DealActivityRow[]).map((a) => ({
+      ...a,
+      staff: a.staff_id
+        ? { id: a.staff_id, name: nameById.get(a.staff_id) ?? "不明" }
+        : null,
+    })),
   };
 }
 
